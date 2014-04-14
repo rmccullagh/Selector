@@ -1,0 +1,336 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+</head>
+<body>
+<form action="/">
+	<input type="tel" required pattern='[\d]?[\d]{3}[-]?[\d]{3}[-]?[\d]{4}' />
+</form>
+<div class="el">
+	<span class="inner-span not-clicked js-component">Class: el</span>
+</div>
+<div class="el">
+	<span id="hello">Hello</span>
+</div>
+<div class="el">adfaf</div>
+<div class="el">adfaf</div>
+<div class="el">adfaf</div>
+<div class="el">adfaf</div>
+<div class="el">adfaf</div>
+<div class="el">adfaf</div>
+
+<script>
+			
+(function(window) {
+	'use strict';
+	var
+		CLASS_REG = /^\.[a-zA-Z_]+[a-zA-Z_0-9-]*/
+		,ID_REG    = /^\#[a-zA-Z_]+[a-zA-Z_0-9-]*/;
+
+	var Selector = function(s) {
+		return new Selector.fn.init(s);
+	}
+	
+	Selector.fn = Selector.prototype = {
+		constructor: Selector
+	};
+	
+	var init = Selector.fn.init = function(selector) {
+		if(typeof selector === 'object') {
+			selector = selector;
+		} else if(CLASS_REG.test(selector)) {
+			selector = document.getElementsByClassName(selector.slice(1));
+		} else if(ID_REG.test(selector)) {
+			selector = document.getElementById(selector.slice(1));
+		} else if(typeof selector === 'string') {
+			selector = document.getElementsByTagName(selector);
+		} else {
+			selector = [];
+		}
+		var nodes = selector;
+		this.selector = nodes;
+		return this;
+	};
+	init.prototype  = Selector.fn;
+	window.Selector = Selector;
+})(this);
+
+(function($){
+	$.fn.getNodeMap = function() {
+		var toString = Object.prototype.toString;
+		var type = toString.call(this.selector);
+		if(type === "[object NodeList]") {
+			return this.selector;
+		} else {
+			return [this.selector];
+		}
+	};
+})(Selector);
+
+/*!
+ * Utilites
+ */
+(function($) {
+	$.fn.isFunction = function(arg) {
+		var toString = Object.prototype.toString;
+		var type = toString.call(arg);
+		if(type === "[object Function]") {
+			return true;
+		}
+		return false;
+	};
+	
+	$.fn.isString = function(arg) {
+		var toString = Object.prototype.toString;
+		var type = toString.call(arg);
+		if(type === "[object String]") {
+			return true;
+		}
+		return false;
+	};
+	
+	$.fn.isUndefined = function(arg) {
+		var toString = Object.prototype.toString;
+		var type = toString.call(arg);
+		if(type === "[object Undefined]") {
+			return true;
+		}
+		return false;
+	};	
+	$.fn.isBoolean = function(arg) {
+		var toString = Object.prototype.toString;
+		var type = toString.call(arg);
+		if(type === "[object Boolean]") {
+			return true;
+		}
+		return false;
+	};
+	$.fn.isNull = function(arg) {
+		var toString = Object.prototype.toString;
+		var type = toString.call(arg);
+		if(type === "[object Null]") {
+			return true;
+		}
+		return false;
+	};
+})(Selector);
+
+(function($){
+	function classManager(type) {
+		var forEach = Array.prototype.forEach;
+		var args    = Array.prototype.slice.call(arguments, 1);
+		forEach.call(this.getNodeMap(), function(el) {
+			forEach.call(args, function(name) {
+				(function (a) {
+					var self = this;
+					setTimeout(function() {
+						self.classList[type](a);
+					}, 0);
+				}).call(el, name);
+			});
+		});	
+		return this;
+	};
+	
+	$.fn.addClass = function() {	
+		var start = (new Date).getTime();
+		var args = Array.prototype.slice.call(arguments);
+		args.unshift('add');
+		return classManager.apply(this, args);
+	};
+		
+	$.fn.removeClass = function() {
+		var start = (new Date).getTime();
+		var args = Array.prototype.slice.call(arguments);
+		args.unshift('remove');
+		return classManager.apply(this, args);
+	};
+
+})(Selector);
+
+(function($) {
+	$.fn.toString = function(o) {
+		var toString = Object.prototype.toString;
+		return toString.call(o);
+	};
+})(Selector);
+
+(function($) {
+	function getEventTarget(etype, context, callback) {
+		var contextType = undefined;
+		if($.fn.isString(context)) {
+			contextType = Array.prototype.slice.call(context).shift();
+		}
+		
+		this.addEventListener(etype, function(e) {		
+			var target = e.target;
+			var currentNodeName 	 = e.target.nodeName.toLowerCase();
+			var currentNodeClassName = e.target.className;
+			var currentNodeId 		 = e.target.id;
+			
+			if(typeof contextType != 'undefined') {
+				if(contextType === '.') {
+					var _className 	  = Array.prototype.slice.call(context);
+					_className.shift();
+					_className = _className.join("");					
+					var _currentClass = currentNodeClassName.split(" ");					
+					var node;
+					while(node = _currentClass.shift()) {
+						if(_className === node) {
+							return callback.apply(e.target, arguments);
+						}
+					}
+															
+				} else if(contextType === '#') {
+					var targetId = Array.prototype.slice.call(context);
+					targetId.shift();
+					targetId = targetId.join("");
+					if(currentNodeId === targetId) {					
+						return callback.apply(e.target, arguments);
+					}
+				} else { 
+					var contextNodeName = context.toLowerCase();
+					if(currentNodeName === contextNodeName) {
+						console.log(currentNodeClassName);
+						callback.apply(e.target, arguments);
+					}
+				}
+			} else {
+				return callback.apply(this, arguments);
+			}
+		});
+	};
+	
+	$.fn.on = function(etype) {
+		var args    = Array.prototype.slice.call(arguments, 1);
+		var forEach = Array.prototype.forEach;
+		var toString;
+		var context;
+		var callback;
+		var len = args.length;
+		while(len--) {
+			if(this.isFunction(args[len])) {
+				callback = args[len];
+				break;
+			}
+		}
+		while(len--) {
+			if(typeof args[len] === 'string') {
+				context = args[len];
+				break;
+			}
+		}
+		//console.log(callback);
+		//console.log(etype);
+		forEach.call(this.getNodeMap(), function(el) {
+			getEventTarget.apply(el, [etype, context, callback]);
+		});
+		
+		
+		//console.log(callback);
+		//console.log(Element.prototype.__proto__.__proto_);	
+		
+		
+		//console.log(this.toString(Element.prototype));
+		//console.log(this.toString(Element));
+		/*
+		var obj = Element.prototype;
+		
+		Object.getOwnPropertyNames(obj).forEach(function(val, idx, array) {
+			//console.log(val + " -> " + obj[val]);
+			//console.log(obj[val].prototype);
+			//console.log(Object.getOwnPropertyDescriptor(obj, val));
+		});
+		
+		function getPrototype(obj) {
+			try {
+				return Object.getPrototypeOf(obj);
+				
+			} catch(e) {
+			
+				return false;
+			}
+		}
+		*/
+		/*
+		
+		console.log(Element.prototype);
+		
+		console.log(Element.prototype.addEventListener);
+		
+		
+		
+		console.log(EventTarget.prototype);
+		*/
+		//console.log(Element.__proto__.__proto__);
+
+		/*
+		var p = Object.getPrototypeOf(Element.prototype);
+		//console.log(p);
+		var m = Object.getPrototypeOf(p);
+		//console.log(m);
+		
+		
+		var x = Object.getPrototypeOf(m);
+		
+		//console.log(x);
+		
+		//console.log(getPrototype(Element));
+		*/
+		
+	
+		/*
+		for(var i in Element.prototype) {
+			
+			//console.log(Element.prototype[i]);
+			//console.log(Element.prototype[i].name);
+		
+			if(Element.prototype.hasOwnProperty(i)) {
+			
+				//console.log(
+				//this.toString(Element.prototype[i]) +
+					//Element.prototype[i].name
+				//);
+			} else {
+				//console.log(Element.prototype[i]);
+			}
+		}
+		*/
+		return this;
+	};
+})(Selector);
+
+(function($) {
+	$.fn.parent = function() {
+		return $(this.selector.parentNode);
+	};
+})(Selector);
+
+(function($) {	
+	
+	$('.el').addClass('new').removeClass('el').addClass('el');
+	
+	//$('#hello').selector.innerHTML='adfadfad';
+	
+	/*
+	$('.el').on('click','#hello', function(e) {
+		console.log($(this));
+		$(this).addClass('clicked').parent().addClass('fuck-you');
+	});
+	*/
+	
+	$('.el').on('click', function(e) {
+		console.log($(this));
+		$(this).addClass('clicked').parent().addClass('fuck-you');
+	},'#hello');
+	
+	$(document.body).addClass('js');
+	
+	console.log($('#hello').parent());
+	
+})(Selector);
+
+</script>
+</body>
+</html>

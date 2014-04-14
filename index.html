@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<script src="init.js"></script>
+<script src="utils.js"></script>
+<script src="dom.js"></script>
+<script src="types.js"></script>
+<script src="css.js"></script>
+<script src="event.js"></script>
+<script>
+
+	$(document).ready(function() {
+		$('.el').addClass('d new').removeClass('d');
+		
+		$('.el').on('click mouseover', function(e) {
+			$(this).addClass('clicked');
+		});
+		
+		$('.el').each(function() {
+			console.log(arguments, this);
+		});
+		
+		$('.el').attr('data-fuck', 'you');
+		
+		
+		console.log($('.el').attr('data-fuck', 'me'));
+		
+	});
+
+	
+</script>
+</head>
+<body>
+<div class="el">adfadf</div>
+<div class="el">adfadf</div>
+<input class="input" value="Test">
+</body>
+</html>
